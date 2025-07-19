@@ -1,5 +1,6 @@
 package com.example.startup.payload;
 
+import com.example.startup.entity.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -37,7 +38,7 @@ public class ApiResponse<T> {
         return ok("Success", null);
     }
 
-    public static ApiResponse<?> error(String message) {
+    public static <T> ApiResponse<?> error(String message) {
         return ApiResponse.builder()
                 .success(false)
                 .message(message)

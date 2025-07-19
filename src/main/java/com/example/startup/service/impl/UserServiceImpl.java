@@ -3,6 +3,7 @@ package com.example.startup.service.impl;
 import com.example.startup.entity.User;
 import com.example.startup.entity.enums.UserRole;
 import com.example.startup.entity.enums.UserStatus;
+import com.example.startup.exception.ResourceNotFoundException;
 import com.example.startup.exception.RestException;
 import com.example.startup.mapper.UserMapper;
 import com.example.startup.payload.ApiResponse;
@@ -54,7 +55,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(currentUser);
 
-        return ApiResponse.ok("Name successfully changed",null);
+        return ApiResponse.ok("Ism o'zgartirildi",null);
     }
 
     @Override
@@ -76,13 +77,13 @@ public class UserServiceImpl implements UserService {
     public ApiResponse<String> checkIMBusy(User currentUser, boolean status) {
         currentUser.setIMBusy(status);
         userRepository.save(currentUser);
-        return ApiResponse.ok("I am busy is: " + status,null);
+        return ApiResponse.ok("Bandlik: " + status,null);
     }
 
     @Override
     public ApiResponse<UserDTO> findById(UUID id) {
         User foundUser = userRepository.findById(id)
-                .orElseThrow(() -> new RestException("User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
 
         return ApiResponse.ok(mapper.toDTO(foundUser));
     }

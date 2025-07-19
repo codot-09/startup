@@ -1,5 +1,7 @@
 package com.example.startup.security;
 
+import com.example.startup.handler.CustomAccessDeniedHandler;
+import com.example.startup.handler.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +34,9 @@ public class SecurityConfig {
     private final AuthenticationProvider jwtProvider;
     private final JwtFilter jwtFilter;
 
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -44,6 +49,10 @@ public class SecurityConfig {
                                 .anyRequest()
                                 .authenticated()
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)  // 401
+                        .accessDeniedHandler(accessDeniedHandler)            // 403
+                )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(jwtProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -52,29 +61,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource()
-    {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Allow credentials (cookies, authentication)
         configuration.setAllowCredentials(true);
-
-        // Specify allowed origins. You can set specific origins or allow all (not recommended in production)
         configuration.setAllowedOriginPatterns(List.of("*"));
-
-        // Allow all headers
         configuration.setAllowedHeaders(List.of("*"));
-
-        // Allow HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Allow specific headers like Authorization
         configuration.setExposedHeaders(List.of("Authorization"));
 
-        // Apply to all paths
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
 }

@@ -5,6 +5,7 @@ import com.example.startup.entity.Order;
 import com.example.startup.entity.User;
 import com.example.startup.entity.enums.JobType;
 import com.example.startup.entity.enums.UserRole;
+import com.example.startup.exception.ResourceNotFoundException;
 import com.example.startup.exception.RestException;
 import com.example.startup.mapper.OrderMapper;
 import com.example.startup.payload.ApiResponse;
@@ -33,9 +34,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public ApiResponse<ResPageable> createOrder(UUID jobId, User client, OrderCreationReq req) {
         JobPost jobPost = jobRepository.findById(jobId)
-                .orElseThrow(() -> new NotFoundException("Job not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("E'lon topilmadi"));
         if (jobPost.getWorker().isIMBusy()){
-            return ApiResponse.error("Worker is busy now",null);
+            return ApiResponse.error("Usta hozir band",null);
         }
 
         Order newOrder = Order.builder()
@@ -58,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
                 .totalElements(page.getTotalElements())
                 .data(orders)
                 .build();
-        return ApiResponse.ok("Order successfully created",response);
+        return ApiResponse.ok("Buyurtma rasmiylashtirildi",response);
     }
 
     @Override

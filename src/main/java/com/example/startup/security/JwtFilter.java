@@ -1,6 +1,8 @@
 package com.example.startup.security;
 
 import com.example.startup.entity.User;
+import com.example.startup.exception.AccessDeniedException;
+import com.example.startup.exception.UnauthorizedException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.ErrorMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,8 +38,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException
-    {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         String requestPath = request.getServletPath();
 
@@ -49,34 +49,41 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authorization = request.getHeader("Authorization");
 
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            String token = authorization.substring(7);
-            sessionToken = token;
-
-            try {
-                if (jwtProvider.isTokenValid(token)) {
-                    String key = jwtProvider.getKeyFromToken(token);
-                    System.out.println("Key from token: " + key);
-
-                    User user = (User) userDetailsService.loadUserByUsername(key);
-
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    user,
-                                    null,
-                                    user.getAuthorities()
-                            );
-
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                }
-            } catch (Exception e) {
-                handleException(response, e.getMessage());
-                return;
-            }
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Authorization header missing or invalid");
         }
-        doFilter(request, response, filterChain);
+
+        String token = authorization.substring(7);
+        sessionToken = token;
+
+        try {
+            if (jwtProvider.isTokenValid(token)) {
+                String key = jwtProvider.getKeyFromToken(token);
+                User user = (User) userDetailsService.loadUserByUsername(key);
+
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(
+                                user,
+                                null,
+                                user.getAuthorities()
+                        );
+
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } else {
+                throw new AccessDeniedException("Token is invalid or expired");
+            }
+        } catch (UnauthorizedException | AccessDeniedException e) {
+            handleCustomException(response,new AccessDeniedException("Access denied"));
+            return;
+        } catch (Exception e) {
+            handleCustomException(response, new UnauthorizedException("Invalid token"));
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
+
 
 
     private boolean isWhiteListed(String path) {
@@ -84,9 +91,20 @@ public class JwtFilter extends OncePerRequestFilter {
         return Arrays.stream(whiteList).anyMatch(pattern -> matcher.match(pattern, path));
     }
 
-    private void handleException(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+    private void handleCustomException(HttpServletResponse response, RuntimeException ex) throws IOException {
+        int statusCode = 500;
+        if (ex instanceof UnauthorizedException) {
+            statusCode = 401;
+        } else if (ex instanceof AccessDeniedException) {
+            statusCode = 403;
+        }
+
+        response.setStatus(statusCode);
         response.setContentType("application/json");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(new ErrorMessage(message)));
+        response.getWriter().write(
+                new ObjectMapper().writeValueAsString(
+                        new ErrorMessage(ex.getMessage())
+                )
+        );
     }
 }

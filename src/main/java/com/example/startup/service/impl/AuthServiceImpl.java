@@ -1,16 +1,14 @@
 package com.example.startup.service.impl;
 
 import com.example.startup.entity.User;
-import com.example.startup.exception.RestException; // RestException ni import qilamiz
+import com.example.startup.exception.ResourceNotFoundException;
 import com.example.startup.payload.ApiResponse;
 import com.example.startup.payload.LoginByKeyDto;
 import com.example.startup.payload.res.ResToken;
 import com.example.startup.repository.UserRepository;
 import com.example.startup.security.JwtProvider;
 import com.example.startup.service.AuthService;
-import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus; // HttpStatus ni ham import qilamiz
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,8 +19,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ApiResponse<ResToken> login(LoginByKeyDto loginDto) {
-        User user = userRepository.findByKey(loginDto.key())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findByKey(loginDto.key()).orElseThrow(
+                () -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
 
         String accessToken = jwtProvider.generateToken(user.getKey());
         String refreshToken = jwtProvider.generateRefreshToken(user.getKey());
@@ -31,7 +29,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         return ApiResponse.ok(
-                "Login successfully",
+                "Muvaffaqiyatli kirish",
                 ResToken.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
@@ -45,10 +43,10 @@ public class AuthServiceImpl implements AuthService {
     public ApiResponse<String> refreshToken(String refreshToken) {
         if (jwtProvider.isRefreshToken(refreshToken)){
             User user = userRepository.findByRefreshToken(refreshToken)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
 
             return ApiResponse.ok(null,jwtProvider.generateToken(user.getKey()));
         }
-        return ApiResponse.error("This not refresh token",null);
+        return ApiResponse.error("Xato refresh token",null);
     }
 }

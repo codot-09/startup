@@ -4,6 +4,7 @@ import com.example.startup.entity.JobPost;
 import com.example.startup.entity.User;
 import com.example.startup.entity.enums.JobStatus;
 import com.example.startup.entity.enums.JobType;
+import com.example.startup.exception.ResourceNotFoundException;
 import com.example.startup.exception.RestException;
 import com.example.startup.mapper.JobMapper;
 import com.example.startup.payload.ApiResponse;
@@ -32,9 +33,9 @@ public class JobServiceImpl implements JobService {
     @Override
     public ApiResponse<List<JobDTO>> create(JobCreationReq req, JobType type, User currentUser) {
         if (jobRepository.findByWorkerId(currentUser.getId()).size() > 4){
-            return ApiResponse.error("You have reached the limit",null);
+            return ApiResponse.error("Sizda limit tugagan",null);
         }else if (jobRepository.existsByType(type)){
-            return ApiResponse.error("Job already created",null);
+            return ApiResponse.error("E'lon allaqachon mavjud",null);
         }
         JobPost newJob = JobPost.builder()
                 .title(req.title())
@@ -49,7 +50,7 @@ public class JobServiceImpl implements JobService {
         jobRepository.save(newJob);
 
         List<JobPost> posts = jobRepository.findByWorkerId(currentUser.getId());
-        return ApiResponse.ok("New job created",mapper.toDtoList(posts));
+        return ApiResponse.ok("E'lon yaratildi",mapper.toDtoList(posts));
     }
 
     @Override
@@ -88,16 +89,16 @@ public class JobServiceImpl implements JobService {
     @Override
     public ApiResponse<List<JobDTO>> deleteJob(UUID jobId) {
         JobPost jobPost = jobRepository.findById(jobId)
-                .orElseThrow(() -> new NotFoundException("Job not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("E'lon topilmadi"));
 
         jobRepository.delete(jobPost);
-        return ApiResponse.ok("Job successfully deleted",null);
+        return ApiResponse.ok("E'lon o'chirildi",null);
     }
 
     @Override
     public ApiResponse<JobDTO> updateJob(UUID jobId, JobCreationReq req,JobType type) {
         JobPost jobPost = jobRepository.findById(jobId)
-                .orElseThrow(() -> new NotFoundException("Job not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("E'lon topilmadi"));
 
         jobPost.setTitle(req.title());
         jobPost.setDescription(req.description());
@@ -106,6 +107,6 @@ public class JobServiceImpl implements JobService {
         jobPost.setLongitude(req.longitude());
 
         jobRepository.save(jobPost);
-        return ApiResponse.ok("Job successfully updated",mapper.toDto(jobPost));
+        return ApiResponse.ok("E'lon tahrirlandi",mapper.toDto(jobPost));
     }
 }
