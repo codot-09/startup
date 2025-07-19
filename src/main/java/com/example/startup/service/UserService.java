@@ -14,7 +14,7 @@ import java.util.UUID;
 @Service
 public interface UserService {
     boolean checkUserExistsByPhone(String phone);
-    String createUserAndReturnKey(String phone,String role);
+    String createUserAndReturnKey(String phone,String role,Long chatId);
 
     ApiResponse<UserDTO> showProfile(User currentUser);
     ApiResponse<String> updateName(User currentUser,String newName);

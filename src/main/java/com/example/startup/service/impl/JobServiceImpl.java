@@ -49,8 +49,7 @@ public class JobServiceImpl implements JobService {
 
         jobRepository.save(newJob);
 
-        List<JobPost> posts = jobRepository.findByWorkerId(currentUser.getId());
-        return ApiResponse.ok("E'lon yaratildi",mapper.toDtoList(posts));
+        return ApiResponse.ok("E'lon yaratildi",null);
     }
 
     @Override
@@ -107,6 +106,7 @@ public class JobServiceImpl implements JobService {
         jobPost.setLongitude(req.longitude());
 
         jobRepository.save(jobPost);
-        return ApiResponse.ok("E'lon tahrirlandi",mapper.toDto(jobPost));
+
+        return ApiResponse.ok("E'lon tahrirlandi",null);
     }
 }

@@ -26,6 +26,9 @@ public class User implements UserDetails {
     private String phone;
 
     @Column(nullable = false,unique = true)
+    private Long chatId;
+
+    @Column(nullable = false,unique = true)
     private String key;
 
     @Enumerated(EnumType.STRING)

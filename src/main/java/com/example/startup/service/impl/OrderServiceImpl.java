@@ -1,5 +1,6 @@
 package com.example.startup.service.impl;
 
+import com.example.startup.bot_service.RegisterBot;
 import com.example.startup.entity.JobPost;
 import com.example.startup.entity.Order;
 import com.example.startup.entity.User;
@@ -27,12 +28,13 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    private final RegisterBot bot;
     private final JobRepository jobRepository;
     private final OrderRepository orderRepository;
     private final OrderMapper mapper;
 
     @Override
-    public ApiResponse<ResPageable> createOrder(UUID jobId, User client, OrderCreationReq req) {
+    public ApiResponse<String> createOrder(UUID jobId, User client, OrderCreationReq req) {
         JobPost jobPost = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("E'lon topilmadi"));
         if (jobPost.getWorker().isIMBusy()){
@@ -49,17 +51,8 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(newOrder);
 
-        Page page = orderRepository.findByCustomerId(client.getId(),null,null,null, PageRequest.of(0,10));
-        List<OrderDTO> orders = mapper.toDTOList(page.getContent());
-
-        ResPageable response = ResPageable.builder()
-                .page(0)
-                .size(10)
-                .totalPage(page.getTotalPages())
-                .totalElements(page.getTotalElements())
-                .data(orders)
-                .build();
-        return ApiResponse.ok("Buyurtma rasmiylashtirildi",response);
+        bot.sendMessageToChat(jobPost.getWorker().getChatId(),"Sizda yangi buyurtma bor");
+        return ApiResponse.ok("Buyurtma rasmiylashtirildi",null);
     }
 
     @Override

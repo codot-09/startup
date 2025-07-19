@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 public interface OrderService {
-    ApiResponse<ResPageable> createOrder(UUID jobId, User client, OrderCreationReq req);
+    ApiResponse<String> createOrder(UUID jobId, User client, OrderCreationReq req);
     ApiResponse<ResPageable> orderHistory(User currentUser, LocalDate startDate, LocalDate endDate, JobType type,int page,int size);
 //    ApiResponse<List<OrderDTO>> getAll() throws NotFoundException;
 }

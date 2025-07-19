@@ -31,11 +31,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String createUserAndReturnKey(String phone,String role) {
+    public String createUserAndReturnKey(String phone,String role,Long chatId) {
         String key = generateRandomCode();
 
         User newUser = User.builder()
                 .phone(phone)
+                .chatId(chatId)
                 .key(key)
                 .name("User")
                 .role(UserRole.valueOf(role))

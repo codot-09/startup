@@ -27,7 +27,7 @@ public class OrderController {
 
     @PostMapping("/{jobId}")
     @Operation(summary = "Yangi order yaratish")
-    public ResponseEntity<ApiResponse<ResPageable>> createOrder(
+    public ResponseEntity<ApiResponse<String>> createOrder(
             @RequestBody OrderCreationReq req,
             @CurrentUser User user,
             @PathVariable UUID jobId

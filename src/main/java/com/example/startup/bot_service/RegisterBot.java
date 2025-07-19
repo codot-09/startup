@@ -57,7 +57,7 @@ public class RegisterBot extends TelegramLongPollingBot {
                     if (exists) {
                         reply.setText("❗️Siz allaqachon ro'yxatdan o'tgansiz.");
                     } else {
-                        String key = userService.createUserAndReturnKey(phone, role);
+                        String key = userService.createUserAndReturnKey(phone, role,chatId);
                         reply.setText("""
                                 ✅ Siz muvaffaqiyatli ro'yxatdan o'tdingiz.
                                 Roli: %s
@@ -116,6 +116,18 @@ public class RegisterBot extends TelegramLongPollingBot {
     }
 
     private void executeSafely(SendMessage message) {
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMessageToChat(Long chatId, String messageText) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(messageText);
+
         try {
             execute(message);
         } catch (TelegramApiException e) {

@@ -1,5 +1,6 @@
 package com.example.startup.service.impl;
 
+import com.example.startup.bot_service.RegisterBot;
 import com.example.startup.entity.Feedback;
 import com.example.startup.entity.JobPost;
 import com.example.startup.exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class FeedbackServiceImpl implements FeedbackService {
+    private final RegisterBot bot;
     private final FeedbackRepository feedbackRepository;
     private final JobRepository jobRepository;
     private final FeedbackMapper mapper;
@@ -33,7 +35,8 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .job(job)
                 .build());
 
-        return ApiResponse.ok("Izoh qoldirildi",mapper.toDto(newFeedback));
+        bot.sendMessageToChat(job.getWorker().getChatId(),"Sizga izoh bildirishdi");
+        return ApiResponse.ok("Izoh qoldirildi",null);
     }
 
     @Override
